@@ -18,17 +18,16 @@ import { LoadingOverlay, toast } from './components/UI'
 
 export default function App() {
   const { state, dispatch } = useApp()
-  const { currentUser, view } = state
+  const { currentUser, view, hideCompleted } = state
   const boot = useBootstrap()
 
   const [loading,      setLoading]      = useState(true)
-  const [hideCompleted,setHideCompleted]= useState(false)
   const [taskModalOpen,setTaskModalOpen]= useState(false)
   const [editingTask,  setEditingTask]  = useState(null)
   const [detailTask,   setDetailTask]   = useState(null)
   const [shareTask,    setShareTask]    = useState(null)
   const [colConfigOpen,setColConfigOpen]= useState(false)
-  const [ctxMenu,      setCtxMenu]      = useState(null)  // { x, y, task }
+  const [ctxMenu,      setCtxMenu]      = useState(null)
 
   // Auto-login on mount
   useEffect(() => {
@@ -64,11 +63,6 @@ export default function App() {
     return () => document.removeEventListener('click', h)
   }, [])
 
-  // Sync hideCompleted to context
-  useEffect(() => {
-    dispatch({ type: 'SET_HIDE_COMPLETED', payload: hideCompleted })
-  }, [hideCompleted])
-
   if (loading) return <LoadingOverlay show message="Starting up…" />
   if (!currentUser) return <LoginPage />
 
@@ -98,7 +92,7 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <TopBar hideCompleted={hideCompleted} onToggleHideCompleted={() => setHideCompleted(h => !h)}
+      <TopBar hideCompleted={hideCompleted} onToggleHideCompleted={() => dispatch({ type: 'SET_HIDE_COMPLETED', payload: !hideCompleted })}
         onOpenColConfig={() => setColConfigOpen(true)} />
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -107,8 +101,8 @@ export default function App() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {view === 'tasks' && (
             <>
-              <QuickFilters onNewTask={openNewTask} hideCompleted={hideCompleted}
-                onToggleHideCompleted={() => setHideCompleted(h => !h)} />
+      <QuickFilters onNewTask={openNewTask} hideCompleted={hideCompleted}
+                onToggleHideCompleted={() => dispatch({ type: 'SET_HIDE_COMPLETED', payload: !hideCompleted })} />
               <TaskGrid
                 onEdit={openEditTask}
                 onDetail={openDetail}
