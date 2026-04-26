@@ -11,9 +11,8 @@ export function isConfigured() {
 async function sbFetch(path, opts = {}) {
   const { method = 'GET', body, params = {} } = opts
   const url = new URL(`${SUPABASE_URL}/rest/v1/${path}`)
-  if (method === 'GET') {
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
-  }
+  // Always apply params as query string — required for WHERE clauses on PATCH/DELETE
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
   const headers = {
     apikey: SUPABASE_ANON,
     Authorization: `Bearer ${SUPABASE_ANON}`,
