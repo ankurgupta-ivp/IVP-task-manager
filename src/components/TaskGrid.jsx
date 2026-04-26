@@ -172,12 +172,13 @@ export default function TaskGrid({ onEdit, onDetail, onShare, onDelete, onContex
   // Per-column filters  { colId: { text? values? } }
   const [colFilters, setColFilters] = useState({})
 
-  // Column widths
-  const [colWidths, setColWidths] = useState({
+  // Column widths — seeded from persisted context, falls back to defaults
+  const DEFAULT_WIDTHS = {
     draghandle: 28, colorbar: 6, title: 220, priority: 100, status: 120,
     category: 100, assignee: 150, tags: 160, startdate: 110, duedate: 110,
     desc: 200, shared: 120, actions: 90,
-  })
+  }
+  const [colWidths, setColWidths] = useState({ ...DEFAULT_WIDTHS, ...(state.colWidths || {}) })
 
   // Pagination
   const [page, setPage]         = useState(1)
@@ -189,6 +190,7 @@ export default function TaskGrid({ onEdit, onDetail, onShare, onDelete, onContex
   // Drag state
   const dragSrcId  = useRef(null)
   const saveTimer  = useRef(null)
+  const resizeTimer= useRef(null)
   const pending    = useRef({})
 
   const [dragOver, setDragOver]   = useState(null)   // {id, pos: 'top'|'bottom'}
@@ -407,7 +409,15 @@ export default function TaskGrid({ onEdit, onDetail, onShare, onDelete, onContex
 
   // ── column width resize ──────────────────────────────────
   function resizeCol(colId, delta) {
-    setColWidths(prev => ({ ...prev, [colId]: Math.max(50, (prev[colId] || 120) + delta) }))
+    setColWidths(prev => {
+      const next = { ...prev, [colId]: Math.max(50, (prev[colId] || 120) + delta) }
+      // Debounce save to context (which saves to localStorage)
+      clearTimeout(resizeTimer.current)
+      resizeTimer.current = setTimeout(() => {
+        dispatch({ type: 'SET_COL_WIDTHS', payload: next })
+      }, 400)
+      return next
+    })
   }
 
   // ── render cell ──────────────────────────────────────────
